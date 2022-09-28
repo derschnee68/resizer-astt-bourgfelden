@@ -37,7 +37,8 @@ function list(currentPath) {
             } else {
             const match = new RegExp(/^(.+)\.(jpg|JPG)$/g).exec(file);
             if(match !== null) {
-
+                const fileName = match[1];
+                const extension = fileName[2];
             }
             }
         });
