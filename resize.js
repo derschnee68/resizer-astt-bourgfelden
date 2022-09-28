@@ -3,12 +3,17 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 
+/**
+ * Resize the image
+ * @param inputFile
+ * @param outputFile
+ * @param width
+ */
 function resize(inputFile, outputFile, width) {
-
-    sharp(inputFile).resize({width}).toFile(outputFile)
+    sharp(inputFile).resize({width}).withMetadata().toFile(outputFile)
         .then(function (newFileInfo) {
             // newFileInfo holds the output file properties
-            console.log("Success")
+            console.log("Success", inputFile);
         })
         .catch(function (err) {
             console.log(inputFile, outputFile);
@@ -16,7 +21,13 @@ function resize(inputFile, outputFile, width) {
         });
 }
 
-function list(folderPath) {
+/**
+ * List recursively files and folders and call resize function when it finds a JPG image and copy it to a new folder
+ * @param folderPath The folder to look for
+ * @param width Resize width
+ * @param level On which "folder level" to add the new folder with copied images
+ */
+function list(folderPath, width, level) {
     fs.readdir(folderPath, function (err, files) {
         //handling error
         if (err) {
@@ -27,19 +38,21 @@ function list(folderPath) {
             const newPath = path.join(folderPath, file);
             // Do whatever you want to do with the file
             if (fs.statSync(newPath).isDirectory()) {
-                fs.mkdirSync(newPath + '_1024');
-                list(newPath);
+                if(level === 1) {
+                    fs.mkdirSync(newPath + '_' + width);
+                }
+                list(newPath, width, level + 1);
             } else {
                 // is file
                 const match = new RegExp(/^(.+)\.(jpg|JPG)$/g).exec(file);
                 if (match !== null) {
-                    resize(path.join(folderPath, file), path.join(folderPath + '_1024', file), 1024);
+                    resize(path.join(folderPath, file), path.join(folderPath + '_' + width, file), width);
                 } else {
-                    fs.cp(path.join(folderPath, file), path.join(folderPath + '_1024', file), () => {});
+                    fs.cp(path.join(folderPath, file), path.join(folderPath + '_' + width, file), () => {});
                 }
             }
         });
     });
 }
 
-list('/Users/julien/Downloads/experiment/Photos papier copy/Photos Rene 2022.08.30');
+list('/Users/julien/Downloads/experiment/Photos papier copy/Photos Rene 2022.09.22', 1024,0);
